@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Camera App</title>
+    <style>
+      /* Add styles here */
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  </head>
+  <body>
+    <video id="video" width="640" height="480" autoplay playsinline></video>
+    <button id="snap">Snap Photo</button>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <img id="photo" alt="The screen capture will appear in this box." />
+
+    <!-- Text area for logging -->
+    <textarea id="log" readonly></textarea>
+
+    <script type="module">
+      // Elements for taking the snapshot
+      var video = document.getElementById("video");
+      var canvas = document.getElementById("canvas");
+      var context = canvas.getContext("2d");
+      var photo = document.getElementById("photo");
+
+      // Log element
+      var log = document.getElementById("log");
+
+      // Function for logging to text area
+      function logText(text) {
+        log.value += text + "\n";
+      }
+
+      // Get access to the camera
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({
+            video: {
+              facingMode: "environment"
+            }
+          })
+          .then(function (stream) {
+            video.srcObject = stream;
+            video.play();
+          });
+      }
+
+      // Trigger photo take
+      document.getElementById("snap").addEventListener("click", function () {
+        context.drawImage(video, 0, 0, 640, 480);
+        var data = canvas.toDataURL("image/png");
+        //photo.setAttribute("src", data);
+
+        // Store image in local storage
+        localStorage.setItem("savedImage", data);
+
+        Tesseract.recognize(data, "eng", {
+          logger: (m) => console.log(m)
+        }).then(({ data: { text } }) => {
+          logText(text);
+        });
+      });
+
+      // Load image from local storage
+      /*
+      var savedImage = localStorage.getItem("savedImage");
+      if (savedImage) {
+        photo.setAttribute("src", savedImage);
+      }
+      */
+    </script>
+  </body>
+</html>
